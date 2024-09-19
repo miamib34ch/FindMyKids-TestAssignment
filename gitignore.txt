@@ -99,9 +99,9 @@ iOSInjectionProject/
 
 ### SwiftPackageManager ###
 Packages
-xcuserdata
-
-
+*xcuserdata*
+*.xcuserdatad*
+*.xcworkspace*
 ### Xcode ###
 
 ## Xcode 8 and earlier
