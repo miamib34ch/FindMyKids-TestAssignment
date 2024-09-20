@@ -1,5 +1,6 @@
 import UIKit
 
+// TODO: добавить обработку жеста назад
 final class CustomNavigationController: UINavigationController {
 
     override init(rootViewController: UIViewController) {
@@ -14,5 +15,6 @@ final class CustomNavigationController: UINavigationController {
     private func configure() {
         navigationBar.titleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.black]
         navigationBar.barTintColor = .white
+        navigationBar.tintColor = .black
     }
 }

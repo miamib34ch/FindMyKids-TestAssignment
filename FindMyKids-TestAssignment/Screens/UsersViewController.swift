@@ -4,7 +4,7 @@ import SnapKit
 final class UsersViewController: UIViewController {
 
     private var users: [GitHubUser] = []
-    private var userDetails: Set<GitHubUserDetail> = []
+    private var usersDetailed: Set<GitHubUserDetail> = []
 
     private var collectionView: UICollectionView!
 
@@ -20,7 +20,7 @@ final class UsersViewController: UIViewController {
         setupObservers()
 
         // TODO: показать заглушку
-        GitHubUsersNetworkService.shared.fetchUsers()
+        GitHubUsersNetworkService.shared.fetchUsers(whichFollow: nil)
     }
 
     private func setupView() {
@@ -44,9 +44,8 @@ final class UsersViewController: UIViewController {
 
         view.addSubview(collectionView)
         collectionView.snp.makeConstraints { make in
-            make.top.equalToSuperview()
+            make.top.bottom.equalToSuperview()
             make.leading.trailing.equalToSuperview().inset(UsersViewControllerConstants.Layout.contentOffset)
-            make.bottom.equalToSuperview()
         }
     }
 
@@ -54,7 +53,7 @@ final class UsersViewController: UIViewController {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(onDataReceived),
-            name: GitHubUsersNetworkService.dataReceivedNotification,
+            name: GitHubUsersNetworkService.usersDataReceivedNotification,
             object: nil
         )
 
@@ -69,9 +68,9 @@ final class UsersViewController: UIViewController {
     @objc private func onDataReceived(_ notification: Notification) {
         if let service = notification.object as? GitHubUsersNetworkServiceProtocol {
             self.users = service.users
-            self.userDetails = service.userDetails
-            Task {
-                collectionView.reloadData()
+            self.usersDetailed = service.usersDetailed
+            Task { [weak self] in
+                self?.collectionView.reloadData()
             }
         }
     }
@@ -89,8 +88,8 @@ extension UsersViewController: UICollectionViewDelegate, UICollectionViewDataSou
     }
 
     func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell: UserPreviewCell = collectionView.dequeueReusableCell(indexPath: indexPath)
-        if let user = userDetails.first(where: { $0.id == users[indexPath.item].id }) {
+        let cell: UserPreviewCell = collectionView.dequeueReusableCell(for: indexPath)
+        if let user = usersDetailed.first(where: { $0.id == users[indexPath.item].id }) {
             cell.configure(with: user)
         } else {
             print("No user details found")
@@ -100,7 +99,12 @@ extension UsersViewController: UICollectionViewDelegate, UICollectionViewDataSou
     }
 
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        let user = users[indexPath.item]
-        // TODO: открытие детальной информации, передать пользователя детального + ссылку на подписчиков
+        if let userDetail = usersDetailed.first(where: { $0.id == users[indexPath.item].id }) {
+            let usersDetailVc = UserDetailViewController(user: userDetail)
+            navigationController?.pushViewController(usersDetailVc, animated: true)
+        } else {
+            print("No user details found")
+            // TODO: показать алерт с ошибкой
+        }
     }
 }

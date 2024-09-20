@@ -103,8 +103,9 @@ final class UserPreviewCell: UICollectionViewCell, ReuseIdentifying {
     }
 
     private func loadAvatarImage(from url: URL) {
-        imageLoadingTask = Task {
-            if let data = try? await fetchData(from: url) {
+        imageLoadingTask = Task { [weak self] in
+            if  let self,
+                let data = try? await fetchData(from: url) {
                 avatarImageView.image = UIImage(data: data)
             }
         }

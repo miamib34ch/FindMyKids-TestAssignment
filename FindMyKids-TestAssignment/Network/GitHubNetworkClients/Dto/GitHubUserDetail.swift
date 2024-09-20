@@ -24,4 +24,8 @@ struct GitHubUserDetail: Decodable, Hashable {
         case email
         case bio
     }
+
+    func toGitHubUser() -> GitHubUser {
+        GitHubUser(login: login, id: id, avatarUrl: avatarUrl)
+    }
 }

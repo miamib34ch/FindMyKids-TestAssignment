@@ -2,14 +2,16 @@ import Foundation
 
 final class GitHubUsersNetworkService: GitHubUsersNetworkServiceProtocol {
 
-    static let dataReceivedNotification = Notification.Name(rawValue: "GitHubUsersNetworkServiceDidReceiveData")
+    var isFollowersFetch: Bool = false
+    static let usersDataReceivedNotification = Notification.Name(rawValue: "GitHubUsersNetworkServiceDidReceiveUsersData")
+    static let followersDataReceivedNotification = Notification.Name(rawValue: "GitHubUsersNetworkServiceDidReceiveFollowersData")
     static let errorNotification = Notification.Name(rawValue: "GitHubUsersNetworkServiceError")
 
     private let defaultNetworkClient = DefaultNetworkClient()
     private var task: NetworkTask?
 
     private(set) var users: [GitHubUser] = []
-    private(set) var userDetails: Set<GitHubUserDetail> = []
+    private(set) var usersDetailed: Set<GitHubUserDetail> = []
 
     static let shared: GitHubUsersNetworkServiceProtocol = GitHubUsersNetworkService()
     private init() {}
@@ -40,7 +42,7 @@ final class GitHubUsersNetworkService: GitHubUsersNetworkServiceProtocol {
             fetchUserDetail(for: user, at: index) { result in
                 switch result {
                     case .success(let userDetails):
-                        self.userDetails.insert(userDetails)
+                        self.usersDetailed.insert(userDetails)
                     case .failure(let error):
                         print("Error fetching user details for \(user.login): \(error)")
                 }
@@ -49,8 +51,16 @@ final class GitHubUsersNetworkService: GitHubUsersNetworkServiceProtocol {
         }
 
         dispatchGroup.notify(queue: .main) { [weak self] in
-            self?.task = nil
-            NotificationCenter.default.post(name: GitHubUsersNetworkService.dataReceivedNotification, object: self)
+            guard let self else {
+                NotificationCenter.default.post(name: GitHubUsersNetworkService.errorNotification, object: self)
+                return
+            }
+            task = nil
+            if isFollowersFetch {
+                NotificationCenter.default.post(name: GitHubUsersNetworkService.followersDataReceivedNotification, object: self)
+            } else {
+                NotificationCenter.default.post(name: GitHubUsersNetworkService.usersDataReceivedNotification, object: self)
+            }
         }
     }
 
