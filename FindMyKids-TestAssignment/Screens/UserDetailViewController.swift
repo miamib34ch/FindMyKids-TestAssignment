@@ -1,6 +1,7 @@
 import UIKit
 import SnapKit
 
+// TODO: картинку можно передавать, а не загружать заново для оптимизации
 final class UserDetailViewController: UIViewController {
 
     private let user: GitHubUserDetail
@@ -84,7 +85,7 @@ final class UserDetailViewController: UIViewController {
         if let service = notification.object as? GitHubUsersNetworkServiceProtocol {
             followers = service.users
             followersDetailed = service.usersDetailed
-            Task { [weak self] in
+            DispatchQueue.main.async { [weak self] in
                 self?.collectionView.reloadData()
             }
         }
@@ -156,8 +157,9 @@ extension UserDetailViewController: UICollectionViewDelegateFlowLayout {
 
     func collectionView(_ collectionView: UICollectionView, layout collectionViewLayout: UICollectionViewLayout, sizeForItemAt indexPath: IndexPath) -> CGSize {
         if indexPath.section == .zero {
-            //TODO: высчитывать динамическую высоту
-            return CGSize(width: collectionView.frame.width, height: UserDetailViewControllerConstants.Layout.cellHeight)
+            let width = collectionView.frame.width
+            let estimatedSize = estimateSizeForUserDetailCell(width: width)
+            return CGSize(width: width, height: estimatedSize.height)
         } else {
             let itemWidth = (collectionView.frame.width - UserDetailViewControllerConstants.Layout.contentSpacing) / 2
             return CGSize(width: itemWidth, height: UserDetailViewControllerConstants.Layout.cellHeight)
@@ -168,22 +170,53 @@ extension UserDetailViewController: UICollectionViewDelegateFlowLayout {
         return section == .zero ? .zero : CGSize(width: collectionView.frame.width, height: UserDetailViewControllerConstants.Layout.headerHeight)
     }
 
+    private func estimateSizeForUserDetailCell(width: CGFloat) -> CGSize {
+        let cell = UserDetailCell()
+        cell.configure(with: user)
+        cell.bounds = CGRect(x: 0, y: 0, width: width, height: CGFloat.greatestFiniteMagnitude)
+        cell.contentView.bounds = cell.bounds
+        cell.setNeedsLayout()
+        cell.layoutIfNeeded()
+        let size = cell.contentView.systemLayoutSizeFitting(UIView.layoutFittingCompressedSize)
+        return size
+    }
 }
 
 // MARK: - UIScrollViewDelegate
 
 extension UserDetailViewController: UIScrollViewDelegate {
 
-    // TODO: можно поизучать анимационное переключение
     func scrollViewDidScroll(_ scrollView: UIScrollView) {
-        guard let visibleIndexPaths = collectionView.indexPathsForVisibleItems.sorted().first else { return }
-        switch visibleIndexPaths.section {
+        let visibleRect = CGRect(origin: collectionView.contentOffset, size: collectionView.bounds.size)
+        guard let layoutAttributes = collectionView.collectionViewLayout.layoutAttributesForElements(in: visibleRect) else { return }
+
+        let topmostElements = layoutAttributes
+            .filter { $0.representedElementCategory == .cell }
+            .sorted { $0.frame.minY < $1.frame.minY }
+        guard let topElement = topmostElements.first else { return }
+
+        let newTitle: String
+        switch topElement.indexPath.section {
             case 0:
-                self.title = user.login
+                newTitle = user.login
             case 1:
-                self.title = UserDetailViewControllerConstants.Strings.title
+                newTitle = UserDetailViewControllerConstants.Strings.title
             default:
-                break
+                newTitle = ""
         }
+
+        updateNavigationBarTitle(to: newTitle)
+    }
+
+
+    private func updateNavigationBarTitle(to title: String) {
+        guard self.title != title else { return }
+        UIView.transition(with: navigationController?.navigationBar ?? UINavigationBar(),
+                          duration: 0.25,
+                          options: .transitionCrossDissolve,
+                          animations: {
+            self.title = title
+        },
+                          completion: nil)
     }
 }

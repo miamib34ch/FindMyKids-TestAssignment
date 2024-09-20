@@ -69,7 +69,7 @@ final class UsersViewController: UIViewController {
         if let service = notification.object as? GitHubUsersNetworkServiceProtocol {
             self.users = service.users
             self.usersDetailed = service.usersDetailed
-            Task { [weak self] in
+            DispatchQueue.main.async { [weak self] in
                 self?.collectionView.reloadData()
             }
         }

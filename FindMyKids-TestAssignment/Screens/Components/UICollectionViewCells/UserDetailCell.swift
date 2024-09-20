@@ -129,7 +129,7 @@ final class UserDetailCell: UICollectionViewCell, ReuseIdentifying {
             make.top.equalTo(infoTitleLabel.snp.bottom).offset(UserDetailCellConstants.Layout.contentOffset / 2)
             make.leading.equalToSuperview().offset(UserDetailCellConstants.Layout.contentOffset)
             make.trailing.equalToSuperview().offset(-UserDetailCellConstants.Layout.contentOffset)
-            make.bottom.lessThanOrEqualToSuperview().offset(-UserDetailCellConstants.Layout.contentOffset)
+            make.bottom.equalToSuperview().offset(-UserDetailCellConstants.Layout.contentOffset)
         }
     }
 

@@ -16,9 +16,19 @@ final class GitHubUsersNetworkService: GitHubUsersNetworkServiceProtocol {
     static let shared: GitHubUsersNetworkServiceProtocol = GitHubUsersNetworkService()
     private init() {}
 
-    func fetchUsers() {
-        if task != nil { return }
-        let request = GitHubUsersRequest()
+    func fetchUsers(whichFollow user: GitHubUser?) {
+        if task != nil {
+            task?.cancel()
+            task = nil
+        }
+        let request: NetworkRequest
+        if let user {
+            request = GitHubUserFollowersRequest(userLogin: user.login)
+            isFollowersFetch = true
+        } else {
+            request = GitHubUsersRequest()
+            isFollowersFetch = false
+        }
         task = defaultNetworkClient.send(request: request, type: [GitHubUser].self, onResponse: resultHandler)
     }
 
