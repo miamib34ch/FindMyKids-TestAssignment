@@ -2,10 +2,11 @@ import Foundation
 
 final class GitHubUsersNetworkService: GitHubUsersNetworkServiceProtocol {
 
-    var isFollowersFetch: Bool = false
     static let usersDataReceivedNotification = Notification.Name(rawValue: "GitHubUsersNetworkServiceDidReceiveUsersData")
     static let followersDataReceivedNotification = Notification.Name(rawValue: "GitHubUsersNetworkServiceDidReceiveFollowersData")
     static let errorNotification = Notification.Name(rawValue: "GitHubUsersNetworkServiceError")
+    
+    private var isFollowersFetch: Bool = false
 
     private let defaultNetworkClient = DefaultNetworkClient()
     private var task: NetworkTask?

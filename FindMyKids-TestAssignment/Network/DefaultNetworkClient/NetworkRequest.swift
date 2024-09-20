@@ -5,7 +5,6 @@ protocol NetworkRequest {
     var httpMethod: String { get }
 }
 
-
 extension NetworkRequest {
     var httpMethod: String { "GET" }
 }
