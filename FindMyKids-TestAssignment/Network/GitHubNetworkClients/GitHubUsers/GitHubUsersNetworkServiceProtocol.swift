@@ -5,7 +5,8 @@ protocol GitHubUsersNetworkServiceProtocol {
     static var dataReceivedNotification: NSNotification.Name { get }
     static var errorNotification: NSNotification.Name { get }
 
-    var users: [GitHubUser]? { get }
+    var users: [GitHubUser] { get }
+    var userDetails: Set<GitHubUserDetail> { get }
 
     func fetchUsers()
 }
